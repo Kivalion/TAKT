@@ -24,10 +24,6 @@ def create_app(config_class=Config):
     def load_user(user_id):
         if user_id.startswith('admin:'):
             from takt.app.models.public import SuperAdminUser
-            try:
-                _db.session.execute(text('SET search_path TO public'))
-            except Exception:
-                pass
             uid = int(user_id.split(':')[1])
             return _db.session.get(SuperAdminUser, uid)
         elif user_id.startswith('tenant:'):

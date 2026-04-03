@@ -31,9 +31,9 @@
             {% if cell_num < first_weekday or ns.day > days_in_month %}
               <td class="calendar-day other-month"></td>
             {% else %}
-              {% set this_date = namespace(d=date(year, month, ns.day)) %}
-              <td class="calendar-day {{ 'today' if this_date.d == today else '' }}">
-                <div class="fw-bold small mb-1 {{ 'text-primary' if this_date.d == today else '' }}">
+              {% set is_today = (year == today.year and month == today.month and ns.day == today.day) %}
+              <td class="calendar-day {{ 'today' if is_today else '' }}">
+                <div class="fw-bold small mb-1 {{ 'text-primary' if is_today else '' }}">
                   {{ ns.day }}
                 </div>
                 {% for task in tasks_by_day.get(ns.day, []) %}

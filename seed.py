@@ -30,13 +30,17 @@ def reset_search_path_tenant():
 
 
 def create_public_schema():
-    """Create all public schema tables."""
+    """Create only public schema tables (not tenant tables)."""
     reset_search_path_public()
     from takt.app.models.public import (
         Tenant, TenantModule, SuperAdminUser, ImpersonationLog,
         BillingPlan, TenantSubscription, Invoice, InvoiceLineItem
     )
-    db.create_all()
+    public_tables = [t for t in db.metadata.sorted_tables if t.schema == 'public']
+    with db.engine.connect() as conn:
+        for table in public_tables:
+            table.create(conn, checkfirst=True)
+        conn.commit()
     print("✓ Public schema tables created")
 
 
