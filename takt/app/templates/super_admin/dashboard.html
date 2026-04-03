@@ -1,0 +1,88 @@
+{% extends 'super_admin/base.html' %}
+{% block title %}Dashboard — TAKT Admin{% endblock %}
+{% block page_title %}Super Admin Dashboard{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card" style="background:#3b82f6;">
+      <div class="stat-value">{{ tenants|length }}</div>
+      <div class="stat-label">Total Tenants</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card" style="background:#10b981;">
+      <div class="stat-value">{{ tenants|selectattr('is_active')|list|length }}</div>
+      <div class="stat-label">Active Tenants</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card" style="background:#f59e0b;">
+      <div class="stat-value">{{ outstanding }}</div>
+      <div class="stat-label">Outstanding Invoices</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    Tenants
+    <a href="{{ url_for('super_admin.tenant_new') }}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-lg"></i> New Tenant
+    </a>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>Name</th><th>Slug</th><th>Modules</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for tenant in tenants %}
+        <tr>
+          <td class="fw-semibold">{{ tenant.name }}</td>
+          <td><code>{{ tenant.slug }}</code></td>
+          <td>
+            {% for m in tenant.modules if m.is_enabled %}
+              <span class="badge bg-secondary me-1">{{ m.module_name }}</span>
+            {% endfor %}
+          </td>
+          <td>
+            {% if tenant.is_active %}
+              <span class="badge badge-active">Active</span>
+            {% else %}
+              <span class="badge badge-inactive">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{{ url_for('super_admin.tenant_edit', tenant_id=tenant.id) }}"
+               class="btn btn-sm btn-outline-secondary">Edit</a>
+            <form method="post"
+                  action="{{ url_for('super_admin.impersonate', tenant_id=tenant.id) }}"
+                  class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-warning">Impersonate</button>
+            </form>
+            {% if tenant.is_active %}
+            <button class="btn btn-sm btn-outline-danger"
+              onclick="confirmAction(
+                '{{ url_for('super_admin.tenant_deactivate', tenant_id=tenant.id) }}',
+                'Deactivate tenant {{ tenant.name }}?', 'Deactivate')">
+              Deactivate
+            </button>
+            {% else %}
+            <form method="post"
+                  action="{{ url_for('super_admin.tenant_activate', tenant_id=tenant.id) }}"
+                  class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No tenants yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

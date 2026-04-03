@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Invoice #{{ inv.id }} — TAKT{% endblock %}
+{% block page_title %}Invoice #{{ inv.id }}{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('billing.invoice_edit', tenant_slug=tenant_slug, invoice_id=inv.id) }}"
+     class="btn btn-outline-secondary btn-sm">Edit</a>
+  <button class="btn btn-outline-danger btn-sm"
+    onclick="confirmAction('{{ url_for('billing.invoice_delete', tenant_slug=tenant_slug, invoice_id=inv.id) }}','Delete invoice #{{ inv.id }}?','Delete')">
+    Delete
+  </button>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Invoice #{{ inv.id }}</span>
+        <span class="badge badge-{{ inv.status }} fs-6">{{ inv.status|capitalize }}</span>
+      </div>
+      <div class="card-body">
+        <div class="row mb-4">
+          <div class="col-6">
+            <strong>Bill to:</strong><br>
+            {{ inv.customer.name }}<br>
+            {% if inv.customer.email %}<small>{{ inv.customer.email }}</small>{% endif %}
+          </div>
+          <div class="col-6 text-end">
+            <div><strong>Issued:</strong> {{ inv.issued_date.strftime('%Y-%m-%d') }}</div>
+            <div><strong>Due:</strong> {{ inv.due_date.strftime('%Y-%m-%d') }}</div>
+            {% if inv.paid_date %}<div><strong>Paid:</strong> {{ inv.paid_date.strftime('%Y-%m-%d') }}</div>{% endif %}
+          </div>
+        </div>
+
+        <table class="table">
+          <thead><tr><th>Description</th><th class="text-end">Qty</th><th class="text-end">Unit price</th><th class="text-end">Total</th></tr></thead>
+          <tbody>
+            {% for item in inv.line_items %}
+            <tr>
+              <td>{{ item.description }}</td>
+              <td class="text-end">{{ item.quantity }}</td>
+              <td class="text-end">€{{ "%.2f"|format(item.unit_price) }}</td>
+              <td class="text-end">€{{ "%.2f"|format(item.total) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" class="text-end fw-bold">Total</td>
+              <td class="text-end fw-bold fs-5">€{{ "%.2f"|format(inv.amount) }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

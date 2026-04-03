@@ -1,0 +1,26 @@
+{% extends 'super_admin/base.html' %}
+{% block title %}{{ title }} — TAKT Admin{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">{{ title }}</div>
+      <div class="card-body">
+        <form method="post">
+          {{ form.hidden_tag() }}
+          <div class="mb-3">{{ form.tenant_id.label(class='form-label') }}{{ form.tenant_id(class='form-select') }}</div>
+          <div class="mb-3">{{ form.amount.label(class='form-label') }}{{ form.amount(class='form-control') }}</div>
+          <div class="mb-3">{{ form.status.label(class='form-label') }}{{ form.status(class='form-select') }}</div>
+          <div class="mb-3">{{ form.issued_date.label(class='form-label') }}{{ form.issued_date(class='form-control') }}</div>
+          <div class="mb-3">{{ form.due_date.label(class='form-label') }}{{ form.due_date(class='form-control') }}</div>
+          <div class="mb-3">{{ form.paid_date.label(class='form-label') }}{{ form.paid_date(class='form-control') }}</div>
+          <div class="mb-3">{{ form.notes.label(class='form-label') }}{{ form.notes(class='form-control', rows=3) }}</div>
+          <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+          <a href="{{ url_for('super_admin.msp_invoices') }}" class="btn btn-link">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

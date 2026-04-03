@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block title %}{{ task.title }} — TAKT{% endblock %}
+{% block page_title %}{{ task.title }}{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('tasks.task_edit', tenant_slug=tenant_slug, task_id=task.id) }}"
+     class="btn btn-outline-secondary btn-sm">Edit</a>
+  <button class="btn btn-outline-danger btn-sm"
+    onclick="confirmAction('{{ url_for('tasks.task_delete', tenant_slug=tenant_slug, task_id=task.id) }}','Delete this task?','Delete')">
+    Delete
+  </button>
+{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-8">
+    <div class="card mb-3">
+      <div class="card-header d-flex gap-2 align-items-center">
+        <span class="badge badge-{{ task.status }}">{{ task.status|replace('-',' ') }}</span>
+        <span class="badge badge-{{ task.priority }}">{{ task.priority }}</span>
+        {% if task.is_overdue %}<span class="badge bg-danger">Overdue</span>{% endif %}
+        {% for t in task.tag_list %}
+          <span class="badge bg-light text-dark border">{{ t }}</span>
+        {% endfor %}
+      </div>
+      <div class="card-body">
+        {% if task.description %}
+          <p style="white-space:pre-wrap;">{{ task.description }}</p>
+        {% else %}
+          <p class="text-muted">No description.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Timer -->
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        Timer
+        {% if timer_task_id == task.id %}
+          <span class="badge bg-warning text-dark timer-running"><i class="bi bi-stopwatch-fill"></i> Running</span>
+        {% endif %}
+      </div>
+      <div class="card-body d-flex gap-2">
+        {% if timer_task_id == task.id %}
+          <form method="post" action="{{ url_for('tasks.timer_stop', tenant_slug=tenant_slug, task_id=task.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger">
+              <i class="bi bi-stop-fill"></i> Stop Timer
+            </button>
+          </form>
+        {% else %}
+          <form method="post" action="{{ url_for('tasks.timer_start', tenant_slug=tenant_slug, task_id=task.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-play-fill"></i> Start Timer
+            </button>
+          </form>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('tasks.task_log_time', tenant_slug=tenant_slug, task_id=task.id) }}"
+              class="d-flex gap-2 align-items-center">
+          {{ time_form.hidden_tag() }}
+          {{ time_form.duration_minutes(class='form-control form-control-sm', style='width:100px', placeholder='Minutes') }}
+          {{ time_form.note(class='form-control form-control-sm', placeholder='Note') }}
+          <button type="submit" class="btn btn-outline-primary btn-sm">Log manually</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Time entries -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        Time Log
+        <span class="badge bg-secondary">Total: {{ task.total_minutes }} min</span>
+      </div>
+      <div class="card-body p-0">
+        {% for entry in task.task_time_entries %}
+        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+          <div>
+            <strong>{{ entry.user.username }}</strong>
+            {% if entry.note %}<span class="text-muted ms-2">— {{ entry.note }}</span>{% endif %}
+          </div>
+          <span class="badge bg-secondary">{{ entry.duration_minutes }} min</span>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-3">No time logged yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">Details</div>
+      <div class="card-body">
+        <dl class="row mb-0 small">
+          <dt class="col-5">Assignee</dt>
+          <dd class="col-7">{{ task.assignee.username if task.assignee else '—' }}</dd>
+          <dt class="col-5">Due date</dt>
+          <dd class="col-7">{{ task.due_date.strftime('%Y-%m-%d') if task.due_date else '—' }}</dd>
+          <dt class="col-5">Estimated</dt>
+          <dd class="col-7">{{ task.estimated_minutes ~ ' min' if task.estimated_minutes else '—' }}</dd>
+          <dt class="col-5">Project</dt>
+          <dd class="col-7">
+            {% if task.project %}
+              <a href="{{ url_for('projects.project_detail', tenant_slug=tenant_slug, project_id=task.project_id) }}">
+                {{ task.project.name }}
+              </a>
+            {% else %}—{% endif %}
+          </dd>
+          <dt class="col-5">Recurring</dt>
+          <dd class="col-7">{{ 'Yes' if task.is_recurring else 'No' }}</dd>
+          <dt class="col-5">Created</dt>
+          <dd class="col-7">{{ task.created_at.strftime('%Y-%m-%d') }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

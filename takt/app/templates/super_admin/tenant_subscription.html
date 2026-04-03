@@ -1,0 +1,24 @@
+{% extends 'super_admin/base.html' %}
+{% block title %}Subscription — TAKT Admin{% endblock %}
+{% block page_title %}Subscription — {{ tenant.name }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">Tenant Subscription</div>
+      <div class="card-body">
+        <form method="post">
+          {{ form.hidden_tag() }}
+          <div class="mb-3">{{ form.plan_id.label(class='form-label') }}{{ form.plan_id(class='form-select') }}</div>
+          <div class="mb-3">{{ form.billing_cycle.label(class='form-label') }}{{ form.billing_cycle(class='form-select') }}</div>
+          <div class="mb-3">{{ form.status.label(class='form-label') }}{{ form.status(class='form-select') }}</div>
+          <div class="mb-3">{{ form.start_date.label(class='form-label') }}{{ form.start_date(class='form-control') }}</div>
+          <div class="mb-3">{{ form.end_date.label(class='form-label') }}{{ form.end_date(class='form-control') }}</div>
+          <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+          <a href="{{ url_for('super_admin.tenants') }}" class="btn btn-link">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

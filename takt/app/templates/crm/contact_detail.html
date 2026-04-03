@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}{{ contact.full_name }} — TAKT{% endblock %}
+{% block page_title %}{{ contact.full_name }}{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('crm.contact_edit', tenant_slug=tenant_slug, contact_id=contact.id) }}"
+     class="btn btn-outline-secondary btn-sm">Edit</a>
+  <button class="btn btn-outline-danger btn-sm"
+    onclick="confirmAction('{{ url_for('crm.contact_delete', tenant_slug=tenant_slug, contact_id=contact.id) }}','Delete {{ contact.full_name }}?','Delete')">
+    Delete
+  </button>
+{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header">Contact Info</div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-4">Name</dt><dd class="col-8">{{ contact.full_name }}</dd>
+          <dt class="col-4">Email</dt><dd class="col-8">{{ contact.email or '—' }}</dd>
+          <dt class="col-4">Phone</dt><dd class="col-8">{{ contact.phone or '—' }}</dd>
+          <dt class="col-4">Company</dt><dd class="col-8">{{ contact.company or '—' }}</dd>
+          <dt class="col-4">Site</dt><dd class="col-8">{{ contact.site.name if contact.site else '—' }}</dd>
+          <dt class="col-4">Created</dt><dd class="col-8">{{ contact.created_at.strftime('%Y-%m-%d') }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header">Notes</div>
+      <div class="card-body">
+        {% if notes_html %}
+          <div class="markdown-content">{{ notes_html|safe }}</div>
+        {% else %}
+          <p class="text-muted mb-0">No notes.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

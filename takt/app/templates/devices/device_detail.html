@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}{{ device.hostname }} — TAKT{% endblock %}
+{% block page_title %}{{ device.hostname }}{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('devices.device_edit', tenant_slug=tenant_slug, device_id=device.id) }}"
+     class="btn btn-outline-secondary btn-sm">Edit</a>
+  {% if device.status != 'decommissioned' %}
+  <button class="btn btn-outline-warning btn-sm"
+    onclick="confirmAction('{{ url_for('devices.device_decommission', tenant_slug=tenant_slug, device_id=device.id) }}','Decommission {{ device.hostname }}?','Decommission')">
+    Decommission
+  </button>
+  {% endif %}
+  <button class="btn btn-outline-danger btn-sm"
+    onclick="confirmAction('{{ url_for('devices.device_delete', tenant_slug=tenant_slug, device_id=device.id) }}','Delete device {{ device.hostname }}?','Delete')">
+    Delete
+  </button>
+{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">Device Info</div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-4">Status</dt>
+          <dd class="col-8"><span class="badge badge-{{ device.status }}">{{ device.status }}</span></dd>
+          <dt class="col-4">Type</dt>
+          <dd class="col-8">{{ device.device_type|capitalize }}</dd>
+          <dt class="col-4">Manufacturer</dt>
+          <dd class="col-8">{{ device.manufacturer or '—' }}</dd>
+          <dt class="col-4">Model</dt>
+          <dd class="col-8">{{ device.model or '—' }}</dd>
+          <dt class="col-4">Serial</dt>
+          <dd class="col-8">{{ device.serial_number or '—' }}</dd>
+          <dt class="col-4">OS</dt>
+          <dd class="col-8">{{ device.os or '—' }} {{ device.os_version or '' }}</dd>
+          <dt class="col-4">Site</dt>
+          <dd class="col-8">{{ device.site.name if device.site else '—' }}</dd>
+          <dt class="col-4">Assigned to</dt>
+          <dd class="col-8">{{ device.assigned_user.username if device.assigned_user else '—' }}</dd>
+          <dt class="col-4">Registered</dt>
+          <dd class="col-8">{{ device.registered_at.strftime('%Y-%m-%d') }}</dd>
+          <dt class="col-4">Tags</dt>
+          <dd class="col-8">
+            {% for t in device.tags %}
+              <span class="badge bg-light text-dark border">{{ t.tag }}</span>
+            {% else %}—{% endfor %}
+          </dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">Notes</div>
+      <div class="card-body">
+        {% if device.notes %}
+          <p style="white-space:pre-wrap;">{{ device.notes }}</p>
+        {% else %}
+          <p class="text-muted mb-0">No notes.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

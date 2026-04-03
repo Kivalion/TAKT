@@ -1,0 +1,23 @@
+{% extends 'super_admin/base.html' %}
+{% block title %}{{ title }} — TAKT Admin{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">{{ title }}</div>
+      <div class="card-body">
+        <form method="post">
+          {{ form.hidden_tag() }}
+          <div class="mb-3">{{ form.name.label(class='form-label') }}{{ form.name(class='form-control') }}</div>
+          <div class="mb-3">{{ form.description.label(class='form-label') }}{{ form.description(class='form-control', rows=3) }}</div>
+          <div class="mb-3">{{ form.price_monthly.label(class='form-label') }}{{ form.price_monthly(class='form-control') }}</div>
+          <div class="mb-3">{{ form.price_yearly.label(class='form-label') }}{{ form.price_yearly(class='form-control') }}</div>
+          <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+          <a href="{{ url_for('super_admin.billing_plans') }}" class="btn btn-link">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

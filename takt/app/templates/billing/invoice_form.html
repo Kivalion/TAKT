@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} — TAKT{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">{{ title }}</div>
+      <div class="card-body">
+        <form method="post" id="invoice-form">
+          {{ form.hidden_tag() }}
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">{{ form.customer_id.label(class='form-label') }}{{ form.customer_id(class='form-select') }}</div>
+            <div class="col-md-6">{{ form.status.label(class='form-label') }}{{ form.status(class='form-select') }}</div>
+            <div class="col-md-4">{{ form.issued_date.label(class='form-label') }}{{ form.issued_date(class='form-control') }}</div>
+            <div class="col-md-4">{{ form.due_date.label(class='form-label') }}{{ form.due_date(class='form-control') }}</div>
+            <div class="col-md-4">{{ form.paid_date.label(class='form-label') }}{{ form.paid_date(class='form-control') }}</div>
+          </div>
+
+          <h6 class="mb-2">Line Items</h6>
+          <table class="table" id="line-items-table">
+            <thead><tr><th>Description</th><th style="width:80px">Qty</th><th style="width:120px">Unit price</th><th style="width:40px"></th></tr></thead>
+            <tbody id="line-items-body">
+              {% if inv is defined and inv.line_items %}
+                {% for item in inv.line_items %}
+                <tr>
+                  <td><input type="text" name="item_desc" class="form-control form-control-sm" value="{{ item.description }}" required></td>
+                  <td><input type="number" name="item_qty" class="form-control form-control-sm" value="{{ item.quantity }}" step="0.01" min="0"></td>
+                  <td><input type="number" name="item_price" class="form-control form-control-sm" value="{{ item.unit_price }}" step="0.01" min="0"></td>
+                  <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()">×</button></td>
+                </tr>
+                {% endfor %}
+              {% else %}
+              <tr>
+                <td><input type="text" name="item_desc" class="form-control form-control-sm" placeholder="Description" required></td>
+                <td><input type="number" name="item_qty" class="form-control form-control-sm" value="1" step="0.01" min="0"></td>
+                <td><input type="number" name="item_price" class="form-control form-control-sm" placeholder="0.00" step="0.01" min="0"></td>
+                <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()">×</button></td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+          <button type="button" class="btn btn-sm btn-outline-secondary mb-3" onclick="addLineItem()">
+            <i class="bi bi-plus-lg"></i> Add line item
+          </button>
+
+          <div>
+            <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+            <a href="{{ url_for('billing.invoices', tenant_slug=tenant_slug) }}" class="btn btn-link">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+function addLineItem() {
+  const tbody = document.getElementById('line-items-body');
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td><input type="text" name="item_desc" class="form-control form-control-sm" placeholder="Description" required></td>
+    <td><input type="number" name="item_qty" class="form-control form-control-sm" value="1" step="0.01" min="0"></td>
+    <td><input type="number" name="item_price" class="form-control form-control-sm" placeholder="0.00" step="0.01" min="0"></td>
+    <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()">×</button></td>
+  `;
+  tbody.appendChild(row);
+}
+</script>
+{% endblock %}
