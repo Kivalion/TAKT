@@ -349,24 +349,23 @@ def impersonation_log():
 def _provision_tenant_schema(slug):
     """Create the schema and tables for a new tenant."""
     from sqlalchemy import text, MetaData
-    from takt.app.models import tenant as tenant_module
+    # Ensure all tenant models are imported so their tables exist in db.metadata
+    from takt.app.models.tenant import (
+        User, Site, UserSite, Contact, Ticket, TicketComment, TimeEntry,
+        Task, TaskTimeEntry, CalendarEvent, Project, ProjectMember,
+        Device, DeviceTag, Customer, CustomerSubscription,
+        CustomerInvoice, CustomerInvoiceLineItem,
+    )
     schema_name = f'tenant_{slug}'
+    tenant_tables = [t for t in db.metadata.sorted_tables if t.schema is None]
+
+    # Clone ALL tables into one MetaData first so inter-table FK references
+    # (e.g. contacts.site_id → sites.id) resolve within the tenant schema.
+    new_meta = MetaData()
+    for table in tenant_tables:
+        table.to_metadata(new_meta, schema=schema_name)
+
     with db.engine.connect() as conn:
         conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema_name}"'))
-        conn.execute(text(f'SET search_path TO "{schema_name}", public'))
-        # Reflect tenant model tables and create in schema
-        meta = MetaData(schema=None)
-        # Get all tenant tables from SQLAlchemy metadata
-        tenant_tables = [
-            t for t in db.metadata.sorted_tables
-            if t.schema is None  # No schema = tenant tables
-        ]
-        for table in tenant_tables:
-            # Clone table with schema set to tenant schema
-            from sqlalchemy import Table
-            cloned = table.tometadata(MetaData(), schema=schema_name)
-            try:
-                cloned.create(conn, checkfirst=True)
-            except Exception:
-                pass
+        new_meta.create_all(conn, checkfirst=True)
         conn.commit()
