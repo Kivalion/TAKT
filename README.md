@@ -25,20 +25,90 @@ A multi-tenant SaaS platform for Managed Service Providers, built with Python 3,
 
 ## Setup
 
-### 1. Create and activate a virtual environment
+### PowerShell (Windows)
+
+#### 1. Create and activate a virtual environment
+
+```powershell
+python -m venv venv
+venv\Scripts\Activate.ps1
+```
+
+> If you get an execution policy error, run first:
+> ```powershell
+> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+> ```
+
+#### 2. Install dependencies
+
+```powershell
+pip install -r requirements.txt
+```
+
+#### 3. Create the PostgreSQL database
+
+```powershell
+createdb takt
+```
+
+Or via psql:
+```sql
+CREATE DATABASE takt;
+```
+
+#### 4. Set environment variables
+
+```powershell
+$env:DATABASE_URL = "postgresql://localhost/takt"
+$env:SECRET_KEY   = "your-secret-key-here"
+```
+
+These are session-scoped. To make them permanent across terminals, use a `.env` file instead (see below) — it is loaded automatically by the app.
+
+Or create a `.env` file in the project root:
+
+```env
+DATABASE_URL=postgresql://localhost/takt
+SECRET_KEY=your-secret-key-here
+```
+
+If your PostgreSQL user requires a password:
+```env
+DATABASE_URL=postgresql://username:password@localhost/takt
+```
+
+#### 5. Run the seed script
+
+```powershell
+python seed.py
+```
+
+#### 6. Run the application
+
+```powershell
+python run.py
+```
+
+The app starts at **http://127.0.0.1:5000**
+
+---
+
+### bash / macOS / Linux
+
+#### 1. Create and activate a virtual environment
 
 ```bash
 python3 -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
+source venv/bin/activate
 ```
 
-### 2. Install dependencies
+#### 2. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Create the PostgreSQL database
+#### 3. Create the PostgreSQL database
 
 ```bash
 createdb takt
@@ -49,7 +119,7 @@ Or using psql:
 CREATE DATABASE takt;
 ```
 
-### 4. Set environment variables
+#### 4. Set environment variables
 
 ```bash
 export DATABASE_URL="postgresql://localhost/takt"
@@ -64,22 +134,17 @@ SECRET_KEY=your-secret-key-here
 ```
 
 If your PostgreSQL user requires a password:
-```
+```env
 DATABASE_URL=postgresql://username:password@localhost/takt
 ```
 
-### 5. Run the seed script
+#### 5. Run the seed script
 
 ```bash
 python seed.py
 ```
 
-This creates:
-- Super admin user
-- Demo tenant with all 6 modules enabled
-- Sample data (contacts, tickets, tasks, projects, devices, invoices)
-
-### 6. Run the application
+#### 6. Run the application
 
 ```bash
 python run.py
