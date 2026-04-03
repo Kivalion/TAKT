@@ -47,14 +47,20 @@ pip install -r requirements.txt
 
 #### 3. Create the PostgreSQL database
 
+Use `psql` to connect and create the database:
+
 ```powershell
-createdb takt
+psql -U postgres -c "CREATE DATABASE takt;"
 ```
 
-Or via psql:
-```sql
-CREATE DATABASE takt;
+If `psql` is not found, add the PostgreSQL `bin` folder to your PATH first (adjust the version number):
+
+```powershell
+$env:PATH += ";C:\Program Files\PostgreSQL\16\bin"
+psql -U postgres -c "CREATE DATABASE takt;"
 ```
+
+Alternatively, open **pgAdmin** (installed with PostgreSQL), right-click **Databases → Create → Database**, and enter `takt`.
 
 #### 4. Set environment variables
 
