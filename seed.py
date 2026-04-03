@@ -42,29 +42,30 @@ def create_public_schema():
 
 def create_tenant_schema(slug):
     """Create a tenant schema and its tables."""
+    from sqlalchemy import MetaData
+    # Import all tenant models so their tables are registered in db.metadata
+    from takt.app.models.tenant import (
+        User, Site, UserSite, Contact, Ticket, TicketComment, TimeEntry,
+        Task, TaskTimeEntry, CalendarEvent, Project, ProjectMember,
+        Device, DeviceTag, Customer, CustomerSubscription,
+        CustomerInvoice, CustomerInvoiceLineItem,
+    )
+
     schema_name = f'tenant_{slug}'
+    tenant_tables = [t for t in db.metadata.sorted_tables if t.schema is None]
+
+    # Clone ALL tables into a single new MetaData before creating anything.
+    # This lets SQLAlchemy resolve FK references between tenant tables
+    # (e.g. contacts.site_id → tenant_demo.sites) correctly.
+    new_meta = MetaData()
+    for table in tenant_tables:
+        table.to_metadata(new_meta, schema=schema_name)
+
     with db.engine.connect() as conn:
         conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema_name}"'))
-        conn.execute(text(f'SET search_path TO "{schema_name}", public'))
-
-        # Get tenant tables (those without an explicit schema)
-        from takt.app.models.tenant import (
-            User, Site, UserSite, Contact, Ticket, TicketComment, TimeEntry,
-            Task, TaskTimeEntry, CalendarEvent, Project, ProjectMember,
-            Device, DeviceTag, Customer, CustomerSubscription,
-            CustomerInvoice, CustomerInvoiceLineItem,
-        )
-        tenant_tables = [
-            t for t in db.metadata.sorted_tables if t.schema is None
-        ]
-        for table in tenant_tables:
-            from sqlalchemy import MetaData, Table
-            cloned = table.tometadata(db.metadata.__class__(), schema=schema_name)
-            try:
-                cloned.create(conn, checkfirst=True)
-            except Exception as e:
-                print(f"  Warning creating {table.name}: {e}")
+        new_meta.create_all(conn, checkfirst=True)
         conn.commit()
+
     print(f"✓ Tenant schema '{schema_name}' created")
 
 
