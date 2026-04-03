@@ -1,0 +1,33 @@
+{% extends 'super_admin/base.html' %}
+{% block title %}Billing Plans — TAKT Admin{% endblock %}
+{% block page_title %}Billing Plans{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('super_admin.billing_plan_new') }}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-lg"></i> New Plan
+  </a>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Name</th><th>Monthly</th><th>Yearly</th><th>Description</th><th></th></tr></thead>
+      <tbody>
+        {% for plan in plans %}
+        <tr>
+          <td class="fw-semibold">{{ plan.name }}</td>
+          <td>€{{ "%.2f"|format(plan.price_monthly) }}</td>
+          <td>€{{ "%.2f"|format(plan.price_yearly) }}</td>
+          <td>{{ plan.description or '—' }}</td>
+          <td class="text-end">
+            <a href="{{ url_for('super_admin.billing_plan_edit', plan_id=plan.id) }}"
+               class="btn btn-sm btn-outline-secondary">Edit</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No plans yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

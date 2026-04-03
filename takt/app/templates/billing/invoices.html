@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Invoices — TAKT{% endblock %}
+{% block page_title %}Invoices{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('billing.invoice_new', tenant_slug=tenant_slug) }}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-lg"></i> New Invoice
+  </a>
+{% endblock %}
+{% block content %}
+<form class="row g-2 mb-3" method="get">
+  <div class="col-auto">
+    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+      <option value="">All statuses</option>
+      {% for s in ['draft','sent','paid','overdue'] %}
+        <option value="{{ s }}" {{ 'selected' if status==s }}>{{ s|capitalize }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="customer_id" class="form-select form-select-sm" onchange="this.form.submit()">
+      <option value="">All customers</option>
+      {% for c in customers %}
+        <option value="{{ c.id }}" {{ 'selected' if customer_id==c.id|string }}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <a href="{{ url_for('billing.invoices', tenant_slug=tenant_slug) }}" class="btn btn-sm btn-link">Clear</a>
+  </div>
+</form>
+
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Customer</th><th>Amount</th><th>Status</th><th>Issued</th><th>Due</th><th></th></tr></thead>
+      <tbody>
+        {% for inv in invoices.items %}
+        <tr>
+          <td>
+            <a href="{{ url_for('billing.invoice_detail', tenant_slug=tenant_slug, invoice_id=inv.id) }}"
+               class="text-decoration-none">{{ inv.customer.name }}</a>
+          </td>
+          <td>€{{ "%.2f"|format(inv.amount) }}</td>
+          <td><span class="badge badge-{{ inv.status }}">{{ inv.status }}</span></td>
+          <td class="small text-muted">{{ inv.issued_date.strftime('%Y-%m-%d') }}</td>
+          <td class="small {{ 'text-danger fw-bold' if inv.status == 'overdue' else 'text-muted' }}">
+            {{ inv.due_date.strftime('%Y-%m-%d') }}
+          </td>
+          <td class="text-end">
+            <a href="{{ url_for('billing.invoice_edit', tenant_slug=tenant_slug, invoice_id=inv.id) }}"
+               class="btn btn-sm btn-outline-secondary">Edit</a>
+            <button class="btn btn-sm btn-outline-danger"
+              onclick="confirmAction('{{ url_for('billing.invoice_delete', tenant_slug=tenant_slug, invoice_id=inv.id) }}','Delete this invoice?','Delete')">
+              Delete
+            </button>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No invoices found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% if invoices.pages > 1 %}
+<nav class="mt-3"><ul class="pagination">
+  {% for p in invoices.iter_pages() %}
+    {% if p %}<li class="page-item {{ 'active' if p==invoices.page }}">
+      <a class="page-link" href="?page={{ p }}&status={{ status }}&customer_id={{ customer_id }}">{{ p }}</a>
+    </li>{% else %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+  {% endfor %}
+</ul></nav>
+{% endif %}
+{% endblock %}

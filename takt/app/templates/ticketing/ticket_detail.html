@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}#{{ ticket.id }} {{ ticket.title }} — TAKT{% endblock %}
+{% block page_title %}#{{ ticket.id }} — {{ ticket.title }}{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('ticketing.ticket_edit', tenant_slug=tenant_slug, ticket_id=ticket.id) }}"
+     class="btn btn-outline-secondary btn-sm">Edit</a>
+  <button class="btn btn-outline-danger btn-sm"
+    onclick="confirmAction('{{ url_for('ticketing.ticket_delete', tenant_slug=tenant_slug, ticket_id=ticket.id) }}','Delete this ticket?','Delete')">
+    Delete
+  </button>
+{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-8">
+    <!-- Ticket body -->
+    <div class="card mb-3">
+      <div class="card-header d-flex gap-2 align-items-center">
+        <span class="badge badge-{{ ticket.status }}">{{ ticket.status|replace('-',' ') }}</span>
+        <span class="badge badge-{{ ticket.priority }}">{{ ticket.priority }}</span>
+        <span class="badge bg-light text-dark border">{{ ticket.type }}</span>
+      </div>
+      <div class="card-body">
+        {% if ticket.description %}
+          <p style="white-space:pre-wrap;">{{ ticket.description }}</p>
+        {% else %}
+          <p class="text-muted">No description.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Comments -->
+    <div class="card mb-3">
+      <div class="card-header">Comments ({{ ticket.comments|length }})</div>
+      <div class="card-body p-0">
+        {% for comment in ticket.comments %}
+        <div class="p-3 border-bottom">
+          <div class="d-flex justify-content-between mb-1">
+            <strong>{{ comment.author.username }}</strong>
+            <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+          </div>
+          <p class="mb-0" style="white-space:pre-wrap;">{{ comment.body }}</p>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-3">No comments yet.</div>
+        {% endfor %}
+      </div>
+      <div class="card-footer">
+        <form method="post" action="{{ url_for('ticketing.ticket_comment', tenant_slug=tenant_slug, ticket_id=ticket.id) }}">
+          {{ comment_form.hidden_tag() }}
+          {{ comment_form.body(class='form-control mb-2', rows=3, placeholder='Write a comment…') }}
+          <button type="submit" class="btn btn-sm btn-primary">Post comment</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Time entries -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        Time Log
+        <span class="badge bg-secondary">Total: {{ ticket.total_minutes }} min</span>
+      </div>
+      <div class="card-body p-0">
+        {% for entry in ticket.time_entries %}
+        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+          <div>
+            <strong>{{ entry.user.username }}</strong>
+            {% if entry.note %}<span class="text-muted ms-2">— {{ entry.note }}</span>{% endif %}
+          </div>
+          <div>
+            <span class="badge bg-secondary">{{ entry.minutes }} min</span>
+            <small class="text-muted ms-2">{{ entry.logged_at.strftime('%Y-%m-%d') }}</small>
+          </div>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-3">No time logged.</div>
+        {% endfor %}
+      </div>
+      <div class="card-footer">
+        <form method="post" action="{{ url_for('ticketing.ticket_log_time', tenant_slug=tenant_slug, ticket_id=ticket.id) }}"
+              class="row g-2 align-items-end">
+          {{ time_form.hidden_tag() }}
+          <div class="col-auto">
+            {{ time_form.minutes(class='form-control form-control-sm', style='width:100px', placeholder='Minutes') }}
+          </div>
+          <div class="col">
+            {{ time_form.note(class='form-control form-control-sm', placeholder='Note (optional)') }}
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-outline-primary">Log time</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">Details</div>
+      <div class="card-body">
+        <dl class="row mb-0 small">
+          <dt class="col-5">Assignee</dt>
+          <dd class="col-7">{{ ticket.assignee.username if ticket.assignee else '—' }}</dd>
+          <dt class="col-5">Site</dt>
+          <dd class="col-7">{{ ticket.site.name if ticket.site else '—' }}</dd>
+          <dt class="col-5">Project</dt>
+          <dd class="col-7">
+            {% if ticket.project %}
+              <a href="{{ url_for('projects.project_detail', tenant_slug=tenant_slug, project_id=ticket.project_id) }}">
+                {{ ticket.project.name }}
+              </a>
+            {% else %}—{% endif %}
+          </dd>
+          <dt class="col-5">Created by</dt>
+          <dd class="col-7">{{ ticket.creator.username if ticket.creator else '—' }}</dd>
+          <dt class="col-5">Created</dt>
+          <dd class="col-7">{{ ticket.created_at.strftime('%Y-%m-%d') }}</dd>
+          <dt class="col-5">Updated</dt>
+          <dd class="col-7">{{ ticket.updated_at.strftime('%Y-%m-%d') }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Sites — TAKT{% endblock %}
+{% block page_title %}Sites{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('auth.site_new', tenant_slug=tenant_slug) }}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-lg"></i> New Site
+  </a>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>Name</th><th>Address</th><th>Contact</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for site in sites.items %}
+        <tr>
+          <td>{{ site.name }}</td>
+          <td>{{ site.address or '—' }}</td>
+          <td>{{ site.contact_email or '—' }}</td>
+          <td>
+            {% if site.is_active %}<span class="badge badge-active">Active</span>
+            {% else %}<span class="badge badge-inactive">Inactive</span>{% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{{ url_for('auth.site_edit', tenant_slug=tenant_slug, site_id=site.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+            <button class="btn btn-sm btn-outline-danger"
+              onclick="confirmAction('{{ url_for('auth.site_delete', tenant_slug=tenant_slug, site_id=site.id) }}', 'Delete site {{ site.name }}?', 'Delete')">
+              Delete
+            </button>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No sites found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% if sites.pages > 1 %}
+<nav class="mt-3">
+  <ul class="pagination">
+    {% for p in sites.iter_pages() %}
+      {% if p %}<li class="page-item {{ 'active' if p == sites.page else '' }}"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
+      {% else %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

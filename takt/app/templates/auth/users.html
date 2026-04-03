@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Users — TAKT{% endblock %}
+{% block page_title %}Users{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('auth.user_new', tenant_slug=tenant_slug) }}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-lg"></i> New User
+  </a>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Username</th><th>Email</th><th>Role</th><th>Status</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users.items %}
+        <tr>
+          <td>{{ user.username }}</td>
+          <td>{{ user.email }}</td>
+          <td><span class="badge bg-secondary">{{ user.role }}</span></td>
+          <td>
+            {% if user.is_active %}
+              <span class="badge badge-active">Active</span>
+            {% else %}
+              <span class="badge badge-inactive">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{{ url_for('auth.user_edit', tenant_slug=tenant_slug, user_id=user.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+            <button class="btn btn-sm btn-outline-danger"
+              onclick="confirmAction('{{ url_for('auth.user_delete', tenant_slug=tenant_slug, user_id=user.id) }}', 'Delete user {{ user.username }}?', 'Delete')">
+              Delete
+            </button>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No users found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% if users.pages > 1 %}
+<nav class="mt-3">
+  <ul class="pagination">
+    {% for p in users.iter_pages() %}
+      {% if p %}
+        <li class="page-item {{ 'active' if p == users.page else '' }}">
+          <a class="page-link" href="{{ request.path }}?page={{ p }}">{{ p }}</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}TAKT{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+{% if session.get('impersonating') %}
+<div class="impersonation-bar">
+  <i class="bi bi-person-fill-gear"></i>
+  Impersonating tenant: <strong>{{ g.tenant.name if g.tenant else '—' }}</strong>
+  &nbsp;&mdash;&nbsp;
+  <a href="{{ url_for('super_admin.stop_impersonation') }}">Stop impersonation</a>
+</div>
+{% endif %}
+
+<div class="d-flex">
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <a class="sidebar-brand d-block" href="{{ url_for('super_admin.dashboard') if not g.tenant else url_for('dashboard.index', tenant_slug=g.tenant.slug) }}">
+      <h5>TAKT</h5>
+      {% if g.tenant %}
+      <small>{{ g.tenant.name }}</small>
+      {% else %}
+      <small>Operations Platform</small>
+      {% endif %}
+    </a>
+
+    <ul class="sidebar-nav">
+      {% if g.tenant %}
+        {# Tenant navigation #}
+        <li><a href="{{ url_for('dashboard.index', tenant_slug=g.tenant.slug) }}"
+               class="{{ 'active' if request.endpoint == 'dashboard.index' else '' }}">
+          <i class="bi bi-house"></i> Dashboard
+        </a></li>
+
+        {% set enabled = g.tenant.get_enabled_modules() %}
+
+        {% if 'crm' in enabled %}
+        <li class="nav-section">CRM</li>
+        <li><a href="{{ url_for('crm.contacts', tenant_slug=g.tenant.slug) }}"
+               class="{{ 'active' if request.blueprint == 'crm' else '' }}">
+          <i class="bi bi-people"></i> Contacts
+        </a></li>
+        {% endif %}
+
+        {% if 'ticketing' in enabled %}
+        <li class="nav-section">Support</li>
+        <li><a href="{{ url_for('ticketing.tickets', tenant_slug=g.tenant.slug) }}"
+               class="{{ 'active' if request.blueprint == 'ticketing' else '' }}">
+          <i class="bi bi-ticket"></i> Tickets
+        </a></li>
+        {% endif %}
+
+        {% if 'tasks' in enabled %}
+        <li class="nav-section">Tasks</li>
+        <li><a href="{{ url_for('tasks.task_list', tenant_slug=g.tenant.slug) }}"
+               class="{{ 'active' if request.endpoint in ['tasks.task_list','tasks.task_detail','tasks.task_new','tasks.task_edit'] else '' }}">
+          <i class="bi bi-check2-square"></i> Tasks
+        </a></li>
+        <li><a href="{{ url_for('tasks.calendar', tenant_slug=g.tenant.slug) }}"
+               class="{{ 'active' if request.endpoint == 'tasks.calendar' else '' }}">
+          <i class="bi bi-calendar3"></i> Calendar
+        </a></li>
+        {% endif %}
+
+        {% if 'projects' in enabled %}
+        <li class="nav-section">Projects</li>
+        <li><a href="{{ url_for('projects.project_list', tenant_slug=g.tenant.slug) }}"
+               class="{{ 'active' if request.blueprint == 'projects' else '' }}">
+          <i class="bi bi-kanban"></i> Projects
+        </a></li>
+        {% endif %}
+
+        {% if 'devices' in enabled %}
+        <li class="nav-section">Assets</li>
+        <li><a href="{{ url_for('devices.device_list', tenant_slug=g.tenant.slug) }}"
+               class="{{ 'active' if request.blueprint == 'devices' else '' }}">
+          <i class="bi bi-laptop"></i> Devices
+        </a></li>
+        {% endif %}
+
+        {% if 'billing' in enabled %}
+        <li class="nav-section">Billing</li>
+        <li><a href="{{ url_for('billing.dashboard', tenant_slug=g.tenant.slug) }}"
+               class="{{ 'active' if request.endpoint == 'billing.dashboard' else '' }}">
+          <i class="bi bi-graph-up"></i> Dashboard
+        </a></li>
+        <li><a href="{{ url_for('billing.customers', tenant_slug=g.tenant.slug) }}"
+               class="{{ 'active' if request.endpoint in ['billing.customers','billing.customer_detail','billing.customer_new','billing.customer_edit'] else '' }}">
+          <i class="bi bi-building"></i> Customers
+        </a></li>
+        <li><a href="{{ url_for('billing.invoices', tenant_slug=g.tenant.slug) }}"
+               class="{{ 'active' if request.endpoint in ['billing.invoices','billing.invoice_detail','billing.invoice_new'] else '' }}">
+          <i class="bi bi-receipt"></i> Invoices
+        </a></li>
+        {% endif %}
+
+        <li class="nav-section">Account</li>
+        {% if current_user.is_authenticated and current_user.is_admin %}
+        <li><a href="{{ url_for('auth.manage_users', tenant_slug=g.tenant.slug) }}"
+               class="{{ 'active' if request.endpoint == 'auth.manage_users' else '' }}">
+          <i class="bi bi-people-fill"></i> Users
+        </a></li>
+        <li><a href="{{ url_for('auth.manage_sites', tenant_slug=g.tenant.slug) }}"
+               class="{{ 'active' if request.endpoint == 'auth.manage_sites' else '' }}">
+          <i class="bi bi-geo-alt"></i> Sites
+        </a></li>
+        {% endif %}
+
+      {% else %}
+        {# No tenant — placeholder #}
+        <li><a href="/"><i class="bi bi-house"></i> Home</a></li>
+      {% endif %}
+    </ul>
+
+    <div class="sidebar-footer">
+      {% if current_user.is_authenticated %}
+        <div class="d-flex align-items-center justify-content-between">
+          <span><i class="bi bi-person-circle"></i> {{ current_user.username }}</span>
+          <a href="{{ url_for('auth.logout') }}" title="Logout"><i class="bi bi-box-arrow-right"></i></a>
+        </div>
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main-wrapper flex-grow-1">
+    <div class="topbar">
+      <button class="btn btn-sm btn-outline-secondary d-md-none" onclick="document.getElementById('sidebar').classList.toggle('open')">
+        <i class="bi bi-list"></i>
+      </button>
+      <span class="topbar-title">{% block page_title %}{% endblock %}</span>
+      <div class="ms-auto d-flex gap-2">{% block topbar_actions %}{% endblock %}</div>
+    </div>
+
+    <div class="flash-container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show mb-0 rounded-0" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endwith %}
+    </div>
+
+    <div class="content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm action</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="confirmModalBody">Are you sure?</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form id="confirmModalForm" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger" id="confirmModalBtn">Confirm</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function confirmAction(url, message, btnText) {
+  document.getElementById('confirmModalBody').textContent = message || 'Are you sure?';
+  document.getElementById('confirmModalForm').action = url;
+  document.getElementById('confirmModalBtn').textContent = btnText || 'Confirm';
+  new bootstrap.Modal(document.getElementById('confirmModal')).show();
+}
+</script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>
