@@ -1,5 +1,5 @@
 from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
+import bcrypt
 from flask_login import UserMixin
 from takt.app.extensions import db
 
@@ -21,11 +21,11 @@ class User(UserMixin, db.Model):
     # stored in session as "tenant:{slug}:{id}"
     _tenant_slug = None
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+    def set_password(self, password: str) -> None:
+        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+    def check_password(self, password: str) -> bool:
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
 
     def get_id(self):
         slug = getattr(self, '_tenant_slug', '') or ''
