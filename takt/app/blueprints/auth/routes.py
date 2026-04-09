@@ -4,13 +4,14 @@ from flask import (
 from flask_login import login_user, logout_user, login_required, current_user
 from takt.app.blueprints.auth import auth_bp
 from takt.app.blueprints.auth.forms import LoginForm, UserForm, SiteForm
-from takt.app.extensions import db
+from takt.app.extensions import db, limiter
 from takt.app.middleware.module_guard import admin_required
 
 
 # ── Login / logout ────────────────────────────────────────────────────────────
 
 @auth_bp.route('/t/<tenant_slug>/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute", methods=["POST"])
 def login(tenant_slug):
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index', tenant_slug=tenant_slug))
@@ -28,6 +29,7 @@ def login(tenant_slug):
 
 
 @auth_bp.route('/admin/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute", methods=["POST"])
 def admin_login():
     if current_user.is_authenticated:
         return redirect(url_for('super_admin.dashboard'))

@@ -1,7 +1,10 @@
+import logging
 from flask import Flask
 from config import Config
-from takt.app.extensions import db, login_manager, csrf
+from takt.app.extensions import db, login_manager, csrf, limiter
 from takt.app.middleware.tenant import init_tenant_middleware
+
+logger = logging.getLogger(__name__)
 
 
 def create_app(config_class=Config):
@@ -12,6 +15,7 @@ def create_app(config_class=Config):
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+    limiter.init_app(app)
 
     login_manager.login_view = 'auth.login_redirect'
     login_manager.login_message_category = 'warning'
@@ -33,8 +37,8 @@ def create_app(config_class=Config):
             uid = int(parts[2])
             try:
                 _db.session.execute(text(f'SET search_path TO tenant_{slug}, public'))
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("Failed to set search_path for tenant '%s': %s", slug, exc)
             user = _db.session.get(User, uid)
             if user:
                 user._tenant_slug = slug
@@ -70,6 +74,20 @@ def create_app(config_class=Config):
     @app.route('/')
     def index():
         return redirect(url_for('super_admin.dashboard'))
+
+    # Health check — exempt from auth and rate limiting
+    from flask import jsonify
+    @app.route('/health')
+    @limiter.exempt
+    def health():
+        checks = {'status': 'ok', 'database': 'ok'}
+        try:
+            db.session.execute(text('SELECT 1'))
+        except Exception as exc:
+            logger.error("Health check database failure: %s", exc)
+            checks['database'] = 'unavailable'
+            checks['status'] = 'degraded'
+        return jsonify(checks), 200 if checks['status'] == 'ok' else 503
 
     # Error handlers
     @app.errorhandler(403)
