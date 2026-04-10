@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 import bcrypt
 from flask_login import UserMixin
@@ -25,7 +26,11 @@ class User(UserMixin, db.Model):
         self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     def check_password(self, password: str) -> bool:
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+        try:
+            return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+        except ValueError:
+            logging.warning("Invalid bcrypt hash for user '%s' — password must be reset", self.username)
+            return False
 
     def get_id(self):
         slug = getattr(self, '_tenant_slug', '') or ''
