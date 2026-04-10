@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import (
     StringField, BooleanField, SelectField, SelectMultipleField,
-    DecimalField, TextAreaField, DateField, SubmitField, widgets
+    DecimalField, TextAreaField, DateField, SubmitField, PasswordField, widgets
 )
 from wtforms.validators import DataRequired, Optional, Length, NumberRange
 
@@ -27,6 +27,12 @@ class TenantForm(FlaskForm):
     is_active = BooleanField('Active', default=True)
     modules = MultiCheckboxField('Enabled modules', choices=MODULE_CHOICES)
     submit = SubmitField('Save')
+
+
+class TenantCreateForm(TenantForm):
+    admin_username = StringField('Admin username', validators=[DataRequired(), Length(2, 80)])
+    admin_password = PasswordField('Admin password', validators=[DataRequired(), Length(8, 256)])
+    submit = SubmitField('Create Tenant')
 
 
 class BillingPlanForm(FlaskForm):

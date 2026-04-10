@@ -5,7 +5,7 @@ from flask import (
 from flask_login import login_required, current_user
 from takt.app.blueprints.super_admin import super_admin_bp
 from takt.app.blueprints.super_admin.forms import (
-    TenantForm, BillingPlanForm, TenantSubscriptionForm, InvoiceForm
+    TenantForm, TenantCreateForm, BillingPlanForm, TenantSubscriptionForm, InvoiceForm
 )
 from takt.app.extensions import db
 from takt.app.middleware.module_guard import super_admin_required
@@ -46,7 +46,9 @@ def tenants():
 @super_admin_required
 def tenant_new():
     from takt.app.models.public import Tenant, TenantModule
-    form = TenantForm()
+    from takt.app.models.tenant import User
+    from sqlalchemy import text
+    form = TenantCreateForm()
     if form.validate_on_submit():
         tenant = Tenant(
             name=form.name.data,
@@ -70,9 +72,26 @@ def tenant_new():
         # Provision tenant schema
         _provision_tenant_schema(tenant.slug)
 
-        flash(f'Tenant "{tenant.name}" created.', 'success')
+        # Create initial admin user in the tenant schema
+        db.session.execute(text(f'SET search_path TO tenant_{tenant.slug}, public'))
+        admin = User(
+            username=form.admin_username.data,
+            email=f'{form.admin_username.data}@{tenant.slug}.local',
+            role='admin',
+            is_active=True,
+        )
+        admin.set_password(form.admin_password.data)
+        db.session.add(admin)
+        db.session.commit()
+        db.session.execute(text('SET search_path TO public'))
+
+        flash(
+            f'Tenant "{tenant.name}" created. '
+            f'Login at /t/{tenant.slug}/login with username: {form.admin_username.data}',
+            'success',
+        )
         return redirect(url_for('super_admin.tenants'))
-    return render_template('super_admin/tenant_form.html', form=form, title='New Tenant')
+    return render_template('super_admin/tenant_form.html', form=form, title='New Tenant', is_new=True)
 
 
 @super_admin_bp.route('/tenants/<int:tenant_id>/edit', methods=['GET', 'POST'])

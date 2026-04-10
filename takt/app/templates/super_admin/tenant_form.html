@@ -16,6 +16,22 @@
             <div class="form-text">Lowercase letters, numbers, hyphens only. Used in URLs.</div>
           </div>
           <div class="mb-3 form-check">{{ form.is_active(class='form-check-input') }}{{ form.is_active.label(class='form-check-label') }}</div>
+          {% if is_new %}
+          <hr>
+          <p class="text-muted small mb-2">Initial admin account for this tenant.</p>
+          <div class="mb-3">
+            {{ form.admin_username.label(class='form-label') }}
+            {{ form.admin_username(class='form-control') }}
+            {% for e in form.admin_username.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ form.admin_password.label(class='form-label') }}
+            {{ form.admin_password(class='form-control') }}
+            <div class="form-text">Minimum 8 characters.</div>
+            {% for e in form.admin_password.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+          <hr>
+          {% endif %}
           <div class="mb-3">
             <label class="form-label fw-semibold">Enabled Modules</label>
             <div class="row g-2">
